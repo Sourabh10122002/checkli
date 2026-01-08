@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Palette */
+  --color-primary: #5AB3C2; /* Teal/Blue similar to Checkli */
+  --color-primary-dark: #459aa8;
+  --color-text-main: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-bg-light: #f9fafb;
+  --color-white: #ffffff;
+  --color-border: #e5e7eb;
+  
+  --spacing-unit: 8px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--color-text-main);
+  background-color: var(--color-white);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  letter-spacing: -0.02em;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-text-main); /* Black/Dark styling for premium feel or primary color */
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  background-color: black;
+  box-shadow: var(--shadow-small);
+}
+
+.btn-primary.large {
+    font-size: 1.1rem;
+    padding: 1rem 2rem;
+    background-color: var(--color-primary);
+}
+
+.btn-primary.large:hover {
+    background-color: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  padding: 0.6rem 1.2rem;
+}
+
+.btn-secondary:hover {
+  color: var(--color-text-main);
+}
+
+/* Hero */
+.hero {
+  text-align: center;
+  padding: 6rem 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.03em;
+  color: var(--color-text-main);
+}
+
+.subtitle {
+  font-size: 1.25rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 2.5rem;
+}
+
+/* Checklist Builder Styles */
+.checklist-builder {
+  background: white;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border);
+  margin-top: 2rem;
+}
+
+.checklist-title-input {
+  width: 100%;
+  font-size: 2rem;
+  font-weight: 700;
+  border: none;
+  outline: none;
+  margin-bottom: 2rem;
+  font-family: var(--font-family);
+  color: var(--color-text-main);
+}
+
+.checklist-title-input::placeholder {
+  color: #d1d5db;
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.checklist-item.checked .item-input {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.item-input {
+  flex: 1;
+  font-size: 1.1rem;
+  border: none;
+  outline: none;
+  font-family: var(--font-family);
+  padding: 0.5rem;
+  color: var(--color-text-main);
+  background: transparent;
+}
+
+/* Custom Checkbox */
+.checkbox-container {
+  display: block;
+  position: relative;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 24px;
+  width: 24px;
+  background-color: #fff;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  border-color: var(--color-primary);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 8px;
+  top: 4px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.delete-btn {
+  background: transparent;
+  color: #d1d5db;
+  font-size: 1.5rem;
+  padding: 0 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.checklist-item:hover .delete-btn {
+  opacity: 1;
+}
+
+.delete-btn:hover {
+  color: #ef4444; 
+}
+
+.add-item-btn {
+  margin-top: 1rem;
+  background: transparent;
+  color: var(--color-primary);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+}
+
+.add-item-btn:hover {
+  background-color: var(--color-bg-light);
+}
+
+/* Calendar Styles */
+.calendar-container {
+  background: white;
+  width: 100%;
+  max-width: 350px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-border);
+  padding: 1rem;
+  margin-right: 2rem;
+  height: fit-content;
+  margin-top: 2rem;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.calendar-header .icon {
+  cursor: pointer;
+  padding: 0.5rem;
+  user-select: none;
+}
+
+.days-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  font-weight: 600;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.cell:hover:not(.disabled) {
+  background-color: var(--color-bg-light);
+}
+
+.cell.selected {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.cell.selected:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.cell.today {
+  border: 1px solid var(--color-primary);
+  font-weight: 700;
+}
+
+.cell.disabled {
+  color: #d1d5db;
+  pointer-events: none;
+}
