@@ -16,7 +16,7 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
     // Flag to skip initial save when state is updated from storage
     const isInitialLoad = useRef(true);
 
-    const newItemInputRef = useRef<HTMLInputElement>(null);
+    const newItemInputRef = useRef<HTMLTextAreaElement>(null);
 
     // Load data when dateKey changes
     useEffect(() => {
@@ -75,7 +75,7 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
             e.preventDefault();
             handleAddItem();
         }
-        if (e.key === 'Backspace' && (e.currentTarget as HTMLInputElement).value === '' && items.length > 1) {
+        if (e.key === 'Backspace' && (e.currentTarget as HTMLTextAreaElement).value === '' && items.length > 1) {
             handleDeleteItem(id);
         }
     };
@@ -104,21 +104,73 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
                             />
                             <span className="checkmark"></span>
                         </label>
-                        <input
-                            ref={index === items.length - 1 ? newItemInputRef : null}
-                            type="text"
-                            className="item-input"
-                            placeholder="Next item..."
-                            value={item.text}
-                            onChange={(e) => handleUpdateItem(item.id, e.target.value)}
-                            onKeyDown={(e) => handleKeyDown(e, item.id)}
-                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <textarea
+                                ref={index === items.length - 1 ? (el) => {
+                                    newItemInputRef.current = el;
+                                    if (el) {
+                                        el.style.height = 'auto';
+                                        el.style.height = el.scrollHeight + 'px';
+                                    }
+                                } : (el) => {
+                                    if (el) {
+                                        el.style.height = 'auto';
+                                        el.style.height = el.scrollHeight + 'px';
+                                    }
+                                }}
+                                className="item-input"
+                                placeholder="Next item..."
+                                value={item.text}
+                                rows={1}
+                                onChange={(e) => {
+                                    handleUpdateItem(item.id, e.target.value);
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
+                                onKeyDown={(e) => handleKeyDown(e, item.id)}
+                                onPaste={(e) => {
+                                    const items = e.clipboardData.items;
+                                    for (let i = 0; i < items.length; i++) {
+                                        if (items[i].type.indexOf("image") !== -1) {
+                                            e.preventDefault();
+                                            const blob = items[i].getAsFile();
+                                            if (blob) {
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const base64 = event.target?.result as string;
+                                                    setItems(prevItems => prevItems.map(it => it.id === item.id ? { ...it, imageBase64: base64 } : it));
+                                                };
+                                                reader.readAsDataURL(blob);
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }}
+                            />
+                            {item.imageBase64 && (
+                                <div className="item-image-container">
+                                    <img src={item.imageBase64} alt="Attached" className="item-attached-image" />
+                                    <button
+                                        className="remove-image-btn"
+                                        onClick={() => setItems(items.map(it => it.id === item.id ? { ...it, imageBase64: undefined } : it))}
+                                        title="Remove image"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         <button
                             className="delete-btn"
                             onClick={() => handleDeleteItem(item.id)}
                             aria-label="Delete item"
                         >
-                            ×
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
                         </button>
                     </div>
                 ))}

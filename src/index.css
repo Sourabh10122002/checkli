@@ -3,21 +3,47 @@
 :root {
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
   
-  /* Palette */
-  --color-primary: #5AB3C2; /* Teal/Blue similar to Checkli */
+  /* Light Theme (Default) */
+  --color-primary: #5AB3C2;
   --color-primary-dark: #459aa8;
   --color-text-main: #1f2937;
   --color-text-secondary: #4b5563;
+  --color-bg-page: #ffffff;
+  --color-bg-card: #ffffff;
   --color-bg-light: #f9fafb;
-  --color-white: #ffffff;
   --color-border: #e5e7eb;
+  --color-input-text: #1f2937;
+  --color-input-placeholder: #d1d5db;
+  --color-checkbox-border: #d1d5db;
+  --color-delete-btn: #d1d5db;
+  --color-delete-btn-hover: #ef4444; 
+  --shadow-color: rgb(0 0 0 / 0.1);
+  --color-calendar-header: #1f2937;
   
   --spacing-unit: 8px;
   --radius-md: 8px;
   --radius-lg: 12px;
   
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -2px var(--shadow-color);
+}
+
+[data-theme="dark"] {
+  --color-primary: #5AB3C2;
+  --color-primary-dark: #459aa8;
+  --color-text-main: #f3f4f6;
+  --color-text-secondary: #9ca3af;
+  --color-bg-page: #111827;
+  --color-bg-card: #1f2937;
+  --color-bg-light: #374151;
+  --color-border: #374151;
+  --color-input-text: #f3f4f6;
+  --color-input-placeholder: #6b7280;
+  --color-checkbox-border: #4b5563;
+  --color-delete-btn: #6b7280;
+  --color-delete-btn-hover: #f87171; 
+  --shadow-color: rgb(0 0 0 / 0.5);
+  --color-calendar-header: #f3f4f6;
 }
 
 * {
@@ -29,9 +55,10 @@
 body {
   font-family: var(--font-family);
   color: var(--color-text-main);
-  background-color: var(--color-white);
+  background-color: var(--color-bg-page);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 button {
@@ -69,26 +96,33 @@ button {
 nav {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 /* Buttons */
 .btn-primary {
-  background-color: var(--color-text-main); /* Black/Dark styling for premium feel or primary color */
-  color: white;
+  background-color: var(--color-text-main);
+  color: var(--color-bg-page); /* Inverted for high contrast */
   padding: 0.6rem 1.2rem;
   border-radius: var(--radius-md);
 }
 
+[data-theme="dark"] .btn-primary {
+    background-color: var(--color-primary); /* Use primary color in dark mode for visibility */
+    color: white;
+}
+
 .btn-primary:hover {
   transform: translateY(-1px);
-  background-color: black;
-  box-shadow: var(--shadow-small);
+  filter: brightness(1.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-primary.large {
     font-size: 1.1rem;
     padding: 1rem 2rem;
     background-color: var(--color-primary);
+    color: white;
 }
 
 .btn-primary.large:hover {
@@ -105,11 +139,27 @@ nav {
   color: var(--color-text-main);
 }
 
+.theme-toggle {
+    background: transparent;
+    color: var(--color-text-secondary);
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.theme-toggle:hover {
+    background-color: var(--color-bg-light);
+    color: var(--color-text-main);
+}
+
 /* Hero */
 .hero {
   text-align: center;
   padding: 6rem 1rem;
-  max-width: 800px;
+  max-width: 1000px; /* Wider container for the image */
   margin: 0 auto;
 }
 
@@ -120,17 +170,38 @@ nav {
   margin-bottom: 1.5rem;
   letter-spacing: -0.03em;
   color: var(--color-text-main);
+  max-width: 800px; /* Constrain text width */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .subtitle {
   font-size: 1.25rem;
   color: var(--color-text-secondary);
   margin-bottom: 2.5rem;
+  max-width: 800px; /* Constrain text width */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-image-container {
+  margin-top: 4rem;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.15); /* Uniform shadow in all directions */
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+}
+
+.hero-image-container img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 /* Checklist Builder Styles */
 .checklist-builder {
-  background: white;
+  background: var(--color-bg-card);
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
@@ -138,6 +209,7 @@ nav {
   box-shadow: var(--shadow-md);
   border: 1px solid var(--color-border);
   margin-top: 2rem;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .checklist-title-input {
@@ -146,13 +218,14 @@ nav {
   font-weight: 700;
   border: none;
   outline: none;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   font-family: var(--font-family);
   color: var(--color-text-main);
+  background: transparent;
 }
 
 .checklist-title-input::placeholder {
-  color: #d1d5db;
+  color: var(--color-input-placeholder);
 }
 
 .checklist-items {
@@ -162,27 +235,39 @@ nav {
 
 .checklist-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Align to top for multi-line support */
   gap: 1rem;
   padding: 0.5rem 0;
   border-bottom: 1px solid transparent;
   transition: all 0.2s;
+  flex-wrap: nowrap; /* Ensure single line */
 }
 
 .checklist-item.checked .item-input {
   text-decoration: line-through;
-  color: #9ca3af;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
 }
 
 .item-input {
   flex: 1;
+  min-width: 0; /* Prevent flex overflow */
   font-size: 1.1rem;
   border: none;
   outline: none;
   font-family: var(--font-family);
   padding: 0.5rem;
-  color: var(--color-text-main);
+  color: var(--color-input-text);
   background: transparent;
+  resize: none; /* Disable manual resize */
+  overflow: hidden; /* Hide scrollbars */
+  min-height: 40px; /* Match single line height roughly */
+  display: block;
+  width: 100%; /* Ensure it fills parent container */
+}
+
+.item-input::placeholder {
+  color: var(--color-input-placeholder);
 }
 
 /* Custom Checkbox */
@@ -193,6 +278,7 @@ nav {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
+  margin-top: 0.5rem; /* Align with text input padding */
 }
 
 .checkbox-container input {
@@ -209,8 +295,8 @@ nav {
   left: 0;
   height: 24px;
   width: 24px;
-  background-color: #fff;
-  border: 2px solid #d1d5db;
+  background-color: var(--color-bg-card);
+  border: 2px solid var(--color-checkbox-border);
   border-radius: 6px;
   transition: all 0.2s;
 }
@@ -235,8 +321,8 @@ nav {
 }
 
 .checkbox-container .checkmark:after {
-  left: 8px;
-  top: 4px;
+  left: 6.5px;
+  top: 2.5px;
   width: 5px;
   height: 10px;
   border: solid white;
@@ -246,11 +332,11 @@ nav {
 
 .delete-btn {
   background: transparent;
-  color: #d1d5db;
-  font-size: 1.5rem;
+  color: var(--color-delete-btn);
+  font-size: 2rem;
   padding: 0 0.5rem;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, color 0.2s;
 }
 
 .checklist-item:hover .delete-btn {
@@ -258,7 +344,7 @@ nav {
 }
 
 .delete-btn:hover {
-  color: #ef4444; 
+  color: var(--color-delete-btn-hover); 
 }
 
 .add-item-btn {
@@ -279,7 +365,7 @@ nav {
 
 /* Calendar Styles */
 .calendar-container {
-  background: white;
+  background: var(--color-bg-card);
   width: 100%;
   max-width: 350px;
   border-radius: var(--radius-md);
@@ -289,6 +375,7 @@ nav {
   margin-right: 2rem;
   height: fit-content;
   margin-top: 2rem;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .calendar-header {
@@ -298,6 +385,7 @@ nav {
   margin-bottom: 1rem;
   font-weight: 700;
   font-size: 1.1rem;
+  color: var(--color-calendar-header);
 }
 
 .calendar-header .icon {
@@ -331,6 +419,7 @@ nav {
   border-radius: 50%;
   font-size: 0.9rem;
   transition: all 0.2s;
+  color: var(--color-text-main);
 }
 
 .cell:hover:not(.disabled) {
@@ -352,6 +441,50 @@ nav {
 }
 
 .cell.disabled {
-  color: #d1d5db;
+  color: var(--color-text-secondary);
+  opacity: 0.3;
   pointer-events: none;
+}
+
+/* Image Attachment Styles */
+.item-image-container {
+  position: relative;
+  margin-top: 0.5rem;
+  display: inline-block;
+}
+
+.item-attached-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  display: block;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  line-height: 1;
+}
+
+.item-image-container:hover .remove-image-btn {
+  opacity: 1;
+}
+
+.remove-image-btn:hover {
+  background: rgba(239, 68, 68, 0.9); /* Red hover */
 }
