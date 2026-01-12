@@ -54,7 +54,7 @@ function App() {
       </header>
       <main>
         {isBuilding ? (
-          <div style={{ display: 'flex', gap: '2rem', maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', alignItems: 'flex-start' }}>
+          <div className="builder-layout">
             <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
             <div style={{ flex: 1 }}>
               <ChecklistBuilder selectedDate={selectedDate} />

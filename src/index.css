@@ -488,3 +488,65 @@ nav {
 .remove-image-btn:hover {
   background: rgba(239, 68, 68, 0.9); /* Red hover */
 }
+
+/* Responsive Layout */
+.builder-layout {
+  display: flex;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  /* Header */
+  .main-header {
+    padding: 1rem;
+  }
+
+  .logo {
+    font-size: 1.2rem;
+  }
+  
+  .logo img {
+      height: 24px !important;
+      width: 24px !important;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 3rem 1rem;
+  }
+
+  .hero h1 {
+    font-size: 2.2rem;
+  }
+  
+  .subtitle {
+      font-size: 1rem;
+  }
+
+  /* Builder Layout */
+  .builder-layout {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch; /* Ensure full width items */
+  }
+
+  .calendar-container {
+    width: 100%;
+    max-width: none;
+    margin-right: 0;
+    margin-top: 1rem;
+  }
+
+  .checklist-builder {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .checklist-title-input {
+      font-size: 1.5rem;
+  }
+}
