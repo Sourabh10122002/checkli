@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { ChecklistItem } from '../types';
-import { format } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 
 interface ChecklistBuilderProps {
     selectedDate: Date;
@@ -78,6 +78,49 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
         if (e.key === 'Backspace' && (e.currentTarget as HTMLTextAreaElement).value === '' && items.length > 1) {
             handleDeleteItem(id);
         }
+    };
+
+    const uncheckedTasks = useMemo(() => {
+        const tasks: Array<{ id: string; text: string; dateKey: string; title: string }> = [];
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key || !key.startsWith('checkli_items_')) {
+                continue;
+            }
+
+            const taskDateKey = key.replace('checkli_items_', '');
+            const rawItems = localStorage.getItem(key);
+            if (!rawItems) {
+                continue;
+            }
+
+            try {
+                const parsedItems = JSON.parse(rawItems) as ChecklistItem[];
+                const checklistTitle = localStorage.getItem(`checkli_title_${taskDateKey}`) || '';
+
+                parsedItems.forEach((item) => {
+                    if (!item.isChecked && item.text.trim()) {
+                        tasks.push({
+                            id: `${taskDateKey}-${item.id}`,
+                            text: item.text.trim(),
+                            dateKey: taskDateKey,
+                            title: checklistTitle.trim(),
+                        });
+                    }
+                });
+            } catch {
+                continue;
+            }
+        }
+
+        tasks.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+        return tasks;
+    }, [items, title, dateKey]);
+
+    const formatTaskDate = (taskDateKey: string) => {
+        const parsedDate = parseISO(taskDateKey);
+        return isValid(parsedDate) ? format(parsedDate, 'MMMM do, yyyy') : taskDateKey;
     };
 
     return (
@@ -179,6 +222,25 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
             <button className="add-item-btn" onClick={handleAddItem}>
                 + Add item
             </button>
+
+            <div className="unchecked-tasks-section">
+                <h3>All unchecked tasks</h3>
+                {uncheckedTasks.length === 0 ? (
+                    <p>No unchecked tasks yet.</p>
+                ) : (
+                    <ul className="unchecked-tasks-list">
+                        {uncheckedTasks.map((task) => (
+                            <li key={task.id} className="unchecked-task-item">
+                                <div className="unchecked-task-date">{formatTaskDate(task.dateKey)}</div>
+                                <div className="unchecked-task-text">{task.text}</div>
+                                {task.title && (
+                                    <div className="unchecked-task-title">{task.title}</div>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
         </div>
     );
 }
