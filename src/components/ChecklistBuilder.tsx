@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import type { ChecklistItem } from '../types';
-import { format, isValid, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 
 interface ChecklistBuilderProps {
     selectedDate: Date;
+    refreshSignal?: number;
+    onDataChange?: () => void;
 }
 
-export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
+export function ChecklistBuilder({ selectedDate, refreshSignal = 0, onDataChange }: ChecklistBuilderProps) {
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
     // Initialize with function to prevent unnecessary localStorage reads on every render, but simplistic here since we use useEffect for updates
@@ -28,19 +30,21 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
         setItems(savedItems ? JSON.parse(savedItems) : [{ id: '1', text: '', isChecked: false }]);
         // Small timeout to allow state to settle before enabling save
         setTimeout(() => { isInitialLoad.current = false; }, 50);
-    }, [dateKey]);
+    }, [dateKey, refreshSignal]);
 
     useEffect(() => {
         if (!isInitialLoad.current) {
             localStorage.setItem(`checkli_title_${dateKey}`, title);
+            onDataChange?.();
         }
-    }, [title, dateKey]);
+    }, [title, dateKey, onDataChange]);
 
     useEffect(() => {
         if (!isInitialLoad.current) {
             localStorage.setItem(`checkli_items_${dateKey}`, JSON.stringify(items));
+            onDataChange?.();
         }
-    }, [items, dateKey]);
+    }, [items, dateKey, onDataChange]);
 
     // Focus the last empty item's input if it was just added
     useEffect(() => {
@@ -78,87 +82,6 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
         if (e.key === 'Backspace' && (e.currentTarget as HTMLTextAreaElement).value === '' && items.length > 1) {
             handleDeleteItem(id);
         }
-    };
-
-    const [, setUncheckedTasksVersion] = useState(0);
-
-    const uncheckedTasks = (() => {
-        const tasks: Array<{ id: string; itemId: string; text: string; dateKey: string; title: string }> = [];
-
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (!key || !key.startsWith('checkli_items_')) {
-                continue;
-            }
-
-            const taskDateKey = key.replace('checkli_items_', '');
-            const rawItems = localStorage.getItem(key);
-            if (!rawItems) {
-                continue;
-            }
-
-            try {
-                const parsedItems = JSON.parse(rawItems) as ChecklistItem[];
-                const checklistTitle = localStorage.getItem(`checkli_title_${taskDateKey}`) || '';
-
-                parsedItems.forEach((item) => {
-                    if (!item.isChecked && item.text.trim()) {
-                        tasks.push({
-                            id: `${taskDateKey}-${item.id}`,
-                            itemId: item.id,
-                            text: item.text.trim(),
-                            dateKey: taskDateKey,
-                            title: checklistTitle.trim(),
-                        });
-                    }
-                });
-            } catch {
-                continue;
-            }
-        }
-
-        tasks.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
-        return tasks;
-    })();
-
-    const handleMarkTaskChecked = (taskDateKey: string, itemId: string) => {
-        const storageKey = `checkli_items_${taskDateKey}`;
-        const rawItems = localStorage.getItem(storageKey);
-        if (!rawItems) {
-            return;
-        }
-
-        try {
-            let hasUpdated = false;
-            const parsedItems = JSON.parse(rawItems) as ChecklistItem[];
-            const updatedItems = parsedItems.map((item) => {
-                if (item.id === itemId && !item.isChecked) {
-                    hasUpdated = true;
-                    return { ...item, isChecked: true };
-                }
-
-                return item;
-            });
-
-            if (!hasUpdated) {
-                return;
-            }
-
-            localStorage.setItem(storageKey, JSON.stringify(updatedItems));
-
-            if (taskDateKey === dateKey) {
-                setItems(updatedItems);
-            }
-
-            setUncheckedTasksVersion((value) => value + 1);
-        } catch {
-            return;
-        }
-    };
-
-    const formatTaskDate = (taskDateKey: string) => {
-        const parsedDate = parseISO(taskDateKey);
-        return isValid(parsedDate) ? format(parsedDate, 'MMMM do, yyyy') : taskDateKey;
     };
 
     return (
@@ -260,31 +183,6 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
             <button className="add-item-btn" onClick={handleAddItem}>
                 + Add item
             </button>
-
-            <div className="unchecked-tasks-section">
-                <h3>All unchecked tasks</h3>
-                {uncheckedTasks.length === 0 ? (
-                    <p>No unchecked tasks yet.</p>
-                ) : (
-                    <ul className="unchecked-tasks-list">
-                        {uncheckedTasks.map((task) => (
-                            <li key={task.id} className="unchecked-task-item">
-                                <div className="unchecked-task-date">{formatTaskDate(task.dateKey)}</div>
-                                <div className="unchecked-task-text">{task.text}</div>
-                                {task.title && (
-                                    <div className="unchecked-task-title">{task.title}</div>
-                                )}
-                                <button
-                                    className="unchecked-task-action"
-                                    onClick={() => handleMarkTaskChecked(task.dateKey, task.itemId)}
-                                >
-                                    Mark as checked
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
         </div>
     );
 }

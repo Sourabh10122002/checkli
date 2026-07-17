@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { ChecklistBuilder } from './components/ChecklistBuilder';
 import { Calendar } from './components/Calendar';
+import { UncheckedTasksPanel } from './components/UncheckedTasksPanel';
 
 function App() {
   const [isBuilding, setIsBuilding] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [cardsRefreshSignal, setCardsRefreshSignal] = useState(0);
+  const [builderRefreshSignal, setBuilderRefreshSignal] = useState(0);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -14,6 +17,15 @@ function App() {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const handleChecklistDataChange = () => {
+    setCardsRefreshSignal((value) => value + 1);
+  };
+
+  const handleTaskChecked = () => {
+    setCardsRefreshSignal((value) => value + 1);
+    setBuilderRefreshSignal((value) => value + 1);
   };
 
   return (
@@ -55,9 +67,16 @@ function App() {
       <main>
         {isBuilding ? (
           <div className="builder-layout">
-            <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+            <div className="builder-sidebar">
+              <Calendar selectedDate={selectedDate} onDateSelect={setSelectedDate} />
+              <UncheckedTasksPanel refreshSignal={cardsRefreshSignal} onTaskChecked={handleTaskChecked} />
+            </div>
             <div style={{ flex: 1 }}>
-              <ChecklistBuilder selectedDate={selectedDate} />
+              <ChecklistBuilder
+                selectedDate={selectedDate}
+                refreshSignal={builderRefreshSignal}
+                onDataChange={handleChecklistDataChange}
+              />
             </div>
           </div>
         ) : (
