@@ -384,8 +384,8 @@ nav {
 
 .unchecked-tasks-list {
   list-style: none;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
@@ -420,6 +420,7 @@ nav {
   padding: 0.45rem 0.75rem;
   border-radius: var(--radius-md);
   font-size: 0.85rem;
+  width: 100%;
 }
 
 .unchecked-task-action:hover {
@@ -611,6 +612,10 @@ nav {
 
   .unchecked-tasks-section {
     max-width: none;
+  }
+
+  .unchecked-tasks-list {
+    grid-template-columns: 1fr;
   }
 
   .checklist-builder {
