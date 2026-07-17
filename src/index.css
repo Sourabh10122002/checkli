@@ -404,6 +404,19 @@ nav {
   color: var(--color-text-secondary);
 }
 
+.unchecked-task-action {
+  margin-top: 0.75rem;
+  background-color: var(--color-primary);
+  color: #fff;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.unchecked-task-action:hover {
+  background-color: var(--color-primary-dark);
+}
+
 /* Calendar Styles */
 .calendar-container {
   background: var(--color-bg-card);

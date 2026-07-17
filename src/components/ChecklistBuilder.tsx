@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { ChecklistItem } from '../types';
 import { format, isValid, parseISO } from 'date-fns';
 
@@ -80,8 +80,10 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
         }
     };
 
-    const uncheckedTasks = (() => {
-        const tasks: Array<{ id: string; text: string; dateKey: string; title: string }> = [];
+    const [uncheckedTasksVersion, setUncheckedTasksVersion] = useState(0);
+
+    const uncheckedTasks = useMemo(() => {
+        const tasks: Array<{ id: string; itemId: string; text: string; dateKey: string; title: string }> = [];
 
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -103,6 +105,7 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
                     if (!item.isChecked && item.text.trim()) {
                         tasks.push({
                             id: `${taskDateKey}-${item.id}`,
+                            itemId: item.id,
                             text: item.text.trim(),
                             dateKey: taskDateKey,
                             title: checklistTitle.trim(),
@@ -116,7 +119,42 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
 
         tasks.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
         return tasks;
-    })();
+    }, [dateKey, items, title, uncheckedTasksVersion]);
+
+    const handleMarkTaskChecked = (taskDateKey: string, itemId: string) => {
+        const storageKey = `checkli_items_${taskDateKey}`;
+        const rawItems = localStorage.getItem(storageKey);
+        if (!rawItems) {
+            return;
+        }
+
+        try {
+            let hasUpdated = false;
+            const parsedItems = JSON.parse(rawItems) as ChecklistItem[];
+            const updatedItems = parsedItems.map((item) => {
+                if (item.id === itemId && !item.isChecked) {
+                    hasUpdated = true;
+                    return { ...item, isChecked: true };
+                }
+
+                return item;
+            });
+
+            if (!hasUpdated) {
+                return;
+            }
+
+            localStorage.setItem(storageKey, JSON.stringify(updatedItems));
+
+            if (taskDateKey === dateKey) {
+                setItems(updatedItems);
+            }
+
+            setUncheckedTasksVersion((value) => value + 1);
+        } catch {
+            return;
+        }
+    };
 
     const formatTaskDate = (taskDateKey: string) => {
         const parsedDate = parseISO(taskDateKey);
@@ -236,6 +274,12 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
                                 {task.title && (
                                     <div className="unchecked-task-title">{task.title}</div>
                                 )}
+                                <button
+                                    className="unchecked-task-action"
+                                    onClick={() => handleMarkTaskChecked(task.dateKey, task.itemId)}
+                                >
+                                    Mark as checked
+                                </button>
                             </li>
                         ))}
                     </ul>
