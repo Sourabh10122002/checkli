@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ChecklistItem } from '../types';
 import { format, isValid, parseISO } from 'date-fns';
 
@@ -80,9 +80,9 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
         }
     };
 
-    const [uncheckedTasksVersion, setUncheckedTasksVersion] = useState(0);
+    const [, setUncheckedTasksVersion] = useState(0);
 
-    const uncheckedTasks = useMemo(() => {
+    const uncheckedTasks = (() => {
         const tasks: Array<{ id: string; itemId: string; text: string; dateKey: string; title: string }> = [];
 
         for (let i = 0; i < localStorage.length; i++) {
@@ -119,7 +119,7 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
 
         tasks.sort((a, b) => a.dateKey.localeCompare(b.dateKey));
         return tasks;
-    }, [dateKey, items, title, uncheckedTasksVersion]);
+    })();
 
     const handleMarkTaskChecked = (taskDateKey: string, itemId: string) => {
         const storageKey = `checkli_items_${taskDateKey}`;
