@@ -4,9 +4,11 @@ import { format } from 'date-fns';
 
 interface ChecklistBuilderProps {
     selectedDate: Date;
+    refreshSignal?: number;
+    onDataChange?: () => void;
 }
 
-export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
+export function ChecklistBuilder({ selectedDate, refreshSignal = 0, onDataChange }: ChecklistBuilderProps) {
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
     // Initialize with function to prevent unnecessary localStorage reads on every render, but simplistic here since we use useEffect for updates
@@ -28,19 +30,21 @@ export function ChecklistBuilder({ selectedDate }: ChecklistBuilderProps) {
         setItems(savedItems ? JSON.parse(savedItems) : [{ id: '1', text: '', isChecked: false }]);
         // Small timeout to allow state to settle before enabling save
         setTimeout(() => { isInitialLoad.current = false; }, 50);
-    }, [dateKey]);
+    }, [dateKey, refreshSignal]);
 
     useEffect(() => {
         if (!isInitialLoad.current) {
             localStorage.setItem(`checkli_title_${dateKey}`, title);
+            onDataChange?.();
         }
-    }, [title, dateKey]);
+    }, [title, dateKey, onDataChange]);
 
     useEffect(() => {
         if (!isInitialLoad.current) {
             localStorage.setItem(`checkli_items_${dateKey}`, JSON.stringify(items));
+            onDataChange?.();
         }
-    }, [items, dateKey]);
+    }, [items, dateKey, onDataChange]);
 
     // Focus the last empty item's input if it was just added
     useEffect(() => {
