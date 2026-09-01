@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ChecklistBuilder } from './components/ChecklistBuilder';
 import { Calendar } from './components/Calendar';
 import { UncheckedTasksPanel } from './components/UncheckedTasksPanel';
@@ -19,20 +19,22 @@ function App() {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
 
-  const handleChecklistDataChange = () => {
+  // Stable identities: these are handed to children that would otherwise treat a new
+  // function on every render as a change worth reacting to.
+  const handleChecklistDataChange = useCallback(() => {
     setCardsRefreshSignal((value) => value + 1);
-  };
+  }, []);
 
-  const handleTaskChecked = () => {
+  const handleTaskChecked = useCallback(() => {
     setCardsRefreshSignal((value) => value + 1);
     setBuilderRefreshSignal((value) => value + 1);
-  };
+  }, []);
 
   return (
     <div className="app-container">
       <header className="main-header">
         <div className="logo" onClick={() => setIsBuilding(false)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img src="/logo.png" alt="Checkli Logo" style={{ height: '32px', width: '32px', borderRadius: '6px' }} />
+          <img src="/logo.png" alt="Checkli Logo" width={32} height={32} style={{ height: '32px', width: '32px', borderRadius: '6px' }} />
           Checkli
         </div>
         <nav>
@@ -87,7 +89,7 @@ function App() {
               <button className="btn-primary large" onClick={() => setIsBuilding(true)}>Make a free checklist</button>
             </div>
             <div className="hero-image-container">
-              <img src="/hero.png" alt="Checkli Dashboard Interface" />
+              <img src="/hero.webp" alt="Checkli Dashboard Interface" width={1600} height={917} decoding="async" />
             </div>
           </section>
         )}
