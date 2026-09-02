@@ -1,5 +1,6 @@
-import type { ChecklistItem } from '../types';
+import { useMemo } from 'react';
 import { format, isValid, parseISO } from 'date-fns';
+import { collectUncheckedTasks, markTaskChecked } from '../storage';
 
 interface UncheckedTasksPanelProps {
     refreshSignal?: number;
@@ -7,74 +8,15 @@ interface UncheckedTasksPanelProps {
 }
 
 export function UncheckedTasksPanel({ refreshSignal = 0, onTaskChecked }: UncheckedTasksPanelProps) {
-    void refreshSignal;
-
-    const uncheckedTasks = (() => {
-        const tasks: Array<{ id: string; itemId: string; text: string; dateKey: string; title: string }> = [];
-
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (!key || !key.startsWith('checkli_items_')) {
-                continue;
-            }
-
-            const taskDateKey = key.replace('checkli_items_', '');
-            const rawItems = localStorage.getItem(key);
-            if (!rawItems) {
-                continue;
-            }
-
-            try {
-                const parsedItems = JSON.parse(rawItems) as ChecklistItem[];
-                const checklistTitle = localStorage.getItem(`checkli_title_${taskDateKey}`) || '';
-
-                parsedItems.forEach((item) => {
-                    if (!item.isChecked && item.text.trim()) {
-                        tasks.push({
-                            id: `${taskDateKey}-${item.id}`,
-                            itemId: item.id,
-                            text: item.text.trim(),
-                            dateKey: taskDateKey,
-                            title: checklistTitle.trim(),
-                        });
-                    }
-                });
-            } catch {
-                continue;
-            }
-        }
-
-        tasks.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
-        return tasks;
-    })();
+    // Reads and parses every stored day, so it must not run on unrelated re-renders.
+    const uncheckedTasks = useMemo(() => {
+        void refreshSignal;
+        return collectUncheckedTasks();
+    }, [refreshSignal]);
 
     const handleMarkTaskChecked = (taskDateKey: string, itemId: string) => {
-        const storageKey = `checkli_items_${taskDateKey}`;
-        const rawItems = localStorage.getItem(storageKey);
-        if (!rawItems) {
-            return;
-        }
-
-        try {
-            let hasUpdated = false;
-            const parsedItems = JSON.parse(rawItems) as ChecklistItem[];
-            const updatedItems = parsedItems.map((item) => {
-                if (item.id === itemId && !item.isChecked) {
-                    hasUpdated = true;
-                    return { ...item, isChecked: true };
-                }
-
-                return item;
-            });
-
-            if (!hasUpdated) {
-                return;
-            }
-
-            localStorage.setItem(storageKey, JSON.stringify(updatedItems));
+        if (markTaskChecked(taskDateKey, itemId)) {
             onTaskChecked();
-        } catch {
-            return;
         }
     };
 

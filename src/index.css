@@ -622,3 +622,17 @@ nav {
       font-size: 1.5rem;
   }
 }
+
+.storage-error {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: var(--radius-md);
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+[data-theme="dark"] .storage-error {
+  color: #fca5a5;
+}
