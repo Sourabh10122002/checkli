@@ -5,7 +5,26 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/png" href="/logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checkli</title>
+  <meta name="description"
+    content="Checkli is a free checklist app. Keep a checklist for every day, paste screenshots into any item, and see what is still open — no account needed." />
+  <meta name="theme-color" content="#f7f9fa" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0e141b" media="(prefers-color-scheme: dark)" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <title>Checkli — free daily checklists</title>
+  <script>
+    // Paint in the right theme. Without this the app applies data-theme only after
+    // its first effect, flashing a light page at dark-mode users.
+    (function () {
+      try {
+        var stored = localStorage.getItem('theme');
+        var theme = stored === 'light' || stored === 'dark'
+          ? stored
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) { /* leave the default light theme in place */ }
+    })();
+  </script>
 </head>
 
 <body>

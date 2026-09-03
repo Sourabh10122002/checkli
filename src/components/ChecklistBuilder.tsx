@@ -157,21 +157,57 @@ export function ChecklistBuilder({ selectedDate, refreshSignal = 0, onDataChange
         }
     };
 
+    // Only items with text count toward progress; a trailing blank row is scaffolding,
+    // not an outstanding task.
+    const trackedItems = items.filter((item) => item.text.trim());
+    const completedCount = trackedItems.filter((item) => item.isChecked).length;
+    const totalCount = trackedItems.length;
+    const progressPercent = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
+    const isComplete = totalCount > 0 && completedCount === totalCount;
+
     return (
-        <div className="checklist-builder">
-            <div className="checklist-date-label" style={{ marginBottom: '1rem', color: 'var(--color-primary)', fontWeight: 600 }}>
-                {format(selectedDate, 'EEEE, MMMM do, yyyy')}
+        <div className="checklist-builder panel">
+            <div className="builder-head">
+                <p className="checklist-date-label">{format(selectedDate, 'EEEE, MMMM do, yyyy')}</p>
+                {totalCount > 0 && (
+                    <p className="checklist-count">{completedCount} of {totalCount} done</p>
+                )}
             </div>
+
             {hasStorageError && (
-                <p className="storage-error" role="alert">{STORAGE_ERROR_MESSAGE}</p>
+                <p className="storage-error" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {STORAGE_ERROR_MESSAGE}
+                </p>
             )}
+
             <input
                 type="text"
                 className="checklist-title-input"
-                placeholder="Checklist Title"
+                placeholder="Untitled checklist"
+                aria-label="Checklist title"
                 value={title}
                 onChange={(e) => changeTitle(e.target.value)}
             />
+
+            {totalCount > 0 && (
+                <div className={`progress ${isComplete ? 'is-complete' : ''}`}>
+                    <div
+                        className="progress-track"
+                        role="progressbar"
+                        aria-valuenow={progressPercent}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Checklist progress: ${completedCount} of ${totalCount} items done`}
+                    >
+                        <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                </div>
+            )}
 
             <div className="checklist-items">
                 {items.map((item) => (
@@ -181,13 +217,15 @@ export function ChecklistBuilder({ selectedDate, refreshSignal = 0, onDataChange
                                 type="checkbox"
                                 checked={item.isChecked}
                                 onChange={() => handleToggleItem(item.id)}
+                                aria-label={item.text.trim() ? `Mark "${item.text.trim()}" as done` : 'Mark item as done'}
                             />
-                            <span className="checkmark"></span>
+                            <span className="checkmark" aria-hidden="true"></span>
                         </label>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="item-body">
                             <AutoGrowTextarea
                                 className="item-input"
-                                placeholder="Next item..."
+                                placeholder="Add an item..."
+                                aria-label="Checklist item"
                                 value={item.text}
                                 rows={1}
                                 autoFocus={item.id === focusItemId}
@@ -197,23 +235,30 @@ export function ChecklistBuilder({ selectedDate, refreshSignal = 0, onDataChange
                             />
                             {item.imageBase64 && (
                                 <div className="item-image-container">
-                                    <img src={item.imageBase64} alt="Attached" className="item-attached-image" />
+                                    <img src={item.imageBase64} alt="Attached to this item" className="item-attached-image" loading="lazy" decoding="async" />
                                     <button
+                                        type="button"
                                         className="remove-image-btn"
                                         onClick={() => handleRemoveImage(item.id)}
+                                        aria-label="Remove attached image"
                                         title="Remove image"
                                     >
-                                        ×
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                            <line x1="18" y1="6" x2="6" y2="18" />
+                                            <line x1="6" y1="6" x2="18" y2="18" />
+                                        </svg>
                                     </button>
                                 </div>
                             )}
                         </div>
                         <button
+                            type="button"
                             className="delete-btn"
                             onClick={() => handleDeleteItem(item.id)}
-                            aria-label="Delete item"
+                            aria-label={item.text.trim() ? `Delete "${item.text.trim()}"` : 'Delete item'}
+                            title="Delete item"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                 <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -224,9 +269,17 @@ export function ChecklistBuilder({ selectedDate, refreshSignal = 0, onDataChange
                 ))}
             </div>
 
-            <button className="add-item-btn" onClick={handleAddItem}>
-                + Add item
+            <button type="button" className="add-item-btn" onClick={handleAddItem}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add item
             </button>
+
+            <p className="builder-hint">
+                <kbd>Enter</kbd> for a new item &middot; <kbd>Backspace</kbd> on an empty item to remove it &middot; paste an image to attach it
+            </p>
         </div>
     );
 }
