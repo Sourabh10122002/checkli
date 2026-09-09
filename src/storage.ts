@@ -164,6 +164,28 @@ export function collectUncheckedTasks(): UncheckedTask[] {
     return tasks;
 }
 
+/**
+ * Date keys that hold something worth showing — a title, or at least one item with
+ * text. Empty days are created just by visiting them, so they must not be marked.
+ */
+export function listDateKeysWithContent(): Set<string> {
+    const dateKeys = new Set<string>();
+
+    for (const dateKey of listDateKeys()) {
+        if ((readKey(TITLE_PREFIX + dateKey) ?? '').trim()) {
+            dateKeys.add(dateKey);
+            continue;
+        }
+
+        const storedItems = parseJson<StoredItem[]>(readKey(ITEMS_PREFIX + dateKey), []);
+        if (storedItems.some((item) => item.text.trim())) {
+            dateKeys.add(dateKey);
+        }
+    }
+
+    return dateKeys;
+}
+
 /** Returns true when the item existed and was flipped from unchecked to checked. */
 export function markTaskChecked(dateKey: string, itemId: string): boolean {
     const rawItems = readKey(ITEMS_PREFIX + dateKey);
