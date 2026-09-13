@@ -345,7 +345,7 @@ nav {
   margin: 0 auto 1.25rem;
   letter-spacing: -0.035em;
   color: var(--color-text-main);
-  max-width: 16ch;
+  max-width: 24ch;
   text-wrap: balance;
 }
 
@@ -418,7 +418,8 @@ nav {
 
 .builder-layout {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 820px);
+  justify-content: center;
   gap: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
@@ -426,10 +427,17 @@ nav {
   align-items: start;
 }
 
+/* Focused programmatically on view change purely to reposition the tab sequence;
+   it is not an interactive control, so it takes no ring. */
+.builder-layout:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .builder-sidebar {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 1rem;
+  align-content: start;
   position: sticky;
   top: 5.5rem;
 }
@@ -643,38 +651,6 @@ nav {
   opacity: 1;
 }
 
-/* Revealed on row hover, but always present for keyboard and touch users. */
-.delete-btn {
-  width: 32px;
-  height: 32px;
-  margin-top: 0.35rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  opacity: 0;
-  flex-shrink: 0;
-}
-
-.checklist-item:hover .delete-btn,
-.checklist-item:focus-within .delete-btn,
-.delete-btn:focus-visible {
-  opacity: 1;
-}
-
-.delete-btn:hover {
-  color: var(--color-danger);
-  background-color: var(--color-danger-soft);
-}
-
-@media (hover: none) {
-  .delete-btn {
-    opacity: 1;
-  }
-}
-
 .add-item-btn {
   margin-top: 0.75rem;
   background: transparent;
@@ -753,6 +729,27 @@ nav {
   overflow-y: auto;
   margin: 0 -0.25rem;
   padding: 0 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+  /* The cap can cut a row in half, and macOS overlay scrollbars stay hidden until
+     you scroll, so a partial row reads as a clipping bug. The panel sets these two
+     lengths only on the edges it can actually scroll toward. */
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  -webkit-mask-image: linear-gradient(
+    to bottom, transparent 0, #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(
+    to bottom, transparent 0, #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)), transparent 100%);
+}
+
+.tasks-list.more-above {
+  --fade-top: 22px;
+}
+
+.tasks-list.more-below {
+  --fade-bottom: 22px;
 }
 
 .task-item {
@@ -1078,6 +1075,359 @@ nav {
 }
 
 /* ==========================================================================
+   Day navigation
+   ========================================================================== */
+
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: -0.4rem;
+}
+
+.day-nav-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.day-nav-btn:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-primary);
+}
+
+.today-chip {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary-soft);
+  border: 1px solid var(--color-primary-border);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* ==========================================================================
+   Item row controls
+   ========================================================================== */
+
+.item-controls {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-top: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* Kept in the layout at all times — collapsing them on blur would reflow the row
+   under the pointer and make the delete button a moving target. */
+.item-control {
+  width: 28px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.checklist-item:hover .item-control,
+.checklist-item:focus-within .item-control,
+.item-control:focus-visible {
+  opacity: 1;
+}
+
+.item-control:hover:not(:disabled) {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-main);
+}
+
+.item-control:disabled {
+  cursor: default;
+  opacity: 0;
+}
+
+.checklist-item:hover .item-control:disabled,
+.checklist-item:focus-within .item-control:disabled {
+  opacity: 0.25;
+}
+
+.delete-btn:hover:not(:disabled) {
+  color: var(--color-danger);
+  background-color: var(--color-danger-soft);
+}
+
+@media (hover: none) {
+  .item-control {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Image viewer
+   ========================================================================== */
+
+.item-image-btn {
+  display: block;
+  padding: 0;
+  border-radius: var(--radius-md);
+  cursor: zoom-in;
+  line-height: 0;
+}
+
+.image-dialog {
+  border: none;
+  padding: 0;
+  /* The global reset zeroes the UA's `dialog { margin: auto }`, which is what
+     centres a modal dialog in its viewport. Restore it explicitly. */
+  margin: auto;
+  background: transparent;
+  max-width: 92vw;
+  max-height: 92vh;
+  overflow: visible;
+  color: var(--color-text-main);
+}
+
+.image-dialog::backdrop {
+  background: rgb(9 13 18 / 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.image-dialog-inner {
+  position: relative;
+  line-height: 0;
+}
+
+.image-dialog img {
+  display: block;
+  max-width: 92vw;
+  max-height: 92vh;
+  width: auto;
+  height: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.image-dialog-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: rgb(17 24 39 / 0.7);
+  backdrop-filter: blur(4px);
+  color: #fff;
+}
+
+.image-dialog-close:hover {
+  background: rgb(17 24 39 / 0.92);
+}
+
+/* ==========================================================================
+   Landing: features and closing CTA
+   ========================================================================== */
+
+.features {
+  margin-top: 5rem;
+  text-align: left;
+}
+
+.features h2 {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-align: center;
+  margin-bottom: 2.5rem;
+  text-wrap: balance;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  transition: border-color var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease);
+}
+
+.feature-card:hover {
+  border-color: var(--color-primary-border);
+  box-shadow: var(--shadow-md);
+}
+
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 0.4rem;
+}
+
+.feature-card p {
+  font-size: 0.925rem;
+  color: var(--color-text-secondary);
+  text-wrap: pretty;
+}
+
+.cta-band {
+  margin-top: 4rem;
+  padding: 3rem 1.5rem;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-primary-border);
+  background-color: var(--color-primary-soft);
+}
+
+.cta-band h2 {
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin-bottom: 0.5rem;
+}
+
+.cta-band p {
+  color: var(--color-text-secondary);
+  margin-bottom: 1.75rem;
+}
+
+/* ==========================================================================
+   Undo toast
+   ========================================================================== */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: calc(var(--z-header) + 20);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 0.7rem 0.7rem 0.7rem 0.95rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-lg);
+  animation: toast-in var(--dur-base) var(--ease);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.75rem);
+  }
+}
+
+.toast > svg {
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.toast-text {
+  font-size: 0.875rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast-action {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  color: var(--color-primary);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-full);
+}
+
+.toast-action:hover {
+  background-color: var(--color-primary-soft);
+}
+
+.toast-dismiss {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
+}
+
+.toast-dismiss:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-main);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  margin-top: auto;
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.footer-brand img {
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.footer-note {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* ==========================================================================
    Responsive
    ========================================================================== */
 
@@ -1087,14 +1437,15 @@ nav {
     padding: 1rem;
   }
 
-  .builder-sidebar {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
+  /* Source order puts the sidebar first for a desktop two-column grid; on one
+     column that buries the actual list under the calendar. */
+  .checklist-builder {
+    order: -1;
   }
 
-  .builder-sidebar > * {
-    flex: 1 1 280px;
+  .builder-sidebar {
+    position: static;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
 }
 
@@ -1130,7 +1481,7 @@ nav {
   }
 
   .builder-sidebar {
-    flex-direction: column;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .checklist-builder {
@@ -1139,6 +1490,37 @@ nav {
 
   .tasks-list {
     max-height: none;
+  }
+
+  /* Three always-visible controls per row eat a quarter of a phone's width.
+     Deleting stays; reordering is a desktop refinement. */
+  .move-btn {
+    display: none;
+  }
+
+  .features {
+    margin-top: 3.5rem;
+  }
+
+  .cta-band {
+    margin-top: 3rem;
+    padding: 2.25rem 1.25rem;
+  }
+
+  .toast {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    transform: none;
+    width: auto;
+    max-width: none;
+  }
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
   }
 }
 
@@ -1154,5 +1536,118 @@ nav {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   Print — a checklist is a thing people take away from the screen
+   ========================================================================== */
+
+@media print {
+  .main-header,
+  .site-footer,
+  .builder-sidebar,
+  .toast,
+  .skip-link,
+  .add-item-btn,
+  .builder-hint,
+  .item-controls,
+  .remove-image-btn,
+  .day-nav-btn,
+  .image-dialog {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .app-container > main {
+    padding-bottom: 0;
+  }
+
+  .builder-layout {
+    display: block;
+    padding: 0;
+    max-width: none;
+  }
+
+  .checklist-builder {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+  }
+
+  .checklist-date-label,
+  .checklist-count {
+    color: #000;
+  }
+
+  /* Screen layout pulls these left to sit flush with the card's text column. With
+     the card padding gone for print they would hang off the page edge. */
+  .day-nav {
+    margin-left: 0;
+  }
+
+  .checklist-title-input {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    width: 100%;
+    /* Print engines paint a field background on <input> regardless of the
+       transparent value; dropping the native appearance is what removes it. */
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    color: #000;
+  }
+
+  .today-chip {
+    background: transparent;
+    border-color: #000;
+    color: #000;
+  }
+
+  .progress-track {
+    border: 1px solid #000;
+  }
+
+  .progress-fill {
+    background: #000;
+  }
+
+  /* Ink-free checkboxes, and rows that never split across a page break. */
+  .checklist-item {
+    break-inside: avoid;
+    padding: 0.15rem 0;
+    margin: 0;
+  }
+
+  .checkmark {
+    border-color: #000;
+    background: transparent;
+  }
+
+  .checkbox-container input:checked ~ .checkmark {
+    background: #000;
+    border-color: #000;
+  }
+
+  .checkmark::after {
+    border-color: #fff;
+  }
+
+  .item-input {
+    color: #000;
+  }
+
+  .checklist-item.checked .item-input {
+    color: #444;
+  }
+
+  .item-attached-image {
+    max-height: 2.5in;
   }
 }

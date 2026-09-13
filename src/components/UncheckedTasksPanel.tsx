@@ -1,10 +1,11 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { format, isValid, parseISO } from 'date-fns';
-import { collectUncheckedTasks, markTaskChecked } from '../storage';
+import { collectUncheckedTasks, setTaskChecked } from '../storage';
+import type { UncheckedTask } from '../storage';
 
 interface UncheckedTasksPanelProps {
     refreshSignal?: number;
-    onTaskChecked: () => void;
+    onTaskChecked: (task: UncheckedTask) => void;
 }
 
 export function UncheckedTasksPanel({ refreshSignal = 0, onTaskChecked }: UncheckedTasksPanelProps) {
@@ -14,11 +15,47 @@ export function UncheckedTasksPanel({ refreshSignal = 0, onTaskChecked }: Unchec
         return collectUncheckedTasks();
     }, [refreshSignal]);
 
-    const handleMarkTaskChecked = (taskDateKey: string, itemId: string) => {
-        if (markTaskChecked(taskDateKey, itemId)) {
-            onTaskChecked();
+    const handleMarkTaskChecked = (task: UncheckedTask) => {
+        if (setTaskChecked(task.dateKey, task.itemId, true)) {
+            onTaskChecked(task);
         }
     };
+
+    // The list is height-capped, so tell the user which way it can still scroll.
+    const listRef = useRef<HTMLUListElement>(null);
+    const [scrollEdges, setScrollEdges] = useState({ above: false, below: false });
+
+    useLayoutEffect(() => {
+        // Nothing to measure when the empty state is showing; the list is unmounted
+        // and its classes go with it.
+        const list = listRef.current;
+        if (!list) {
+            return;
+        }
+
+        const update = () => {
+            const overflow = list.scrollHeight - list.clientHeight;
+            const above = overflow > 1 && list.scrollTop > 1;
+            const below = overflow > 1 && list.scrollTop < overflow - 1;
+            // Scrolling fires this continuously, so only re-render on a real change.
+            setScrollEdges((previous) => (
+                previous.above === above && previous.below === below
+                    ? previous
+                    : { above, below }
+            ));
+        };
+
+        update();
+        // Row heights change with wrapping, so watch the box as well as the scroll.
+        const observer = new ResizeObserver(update);
+        observer.observe(list);
+        list.addEventListener('scroll', update, { passive: true });
+
+        return () => {
+            observer.disconnect();
+            list.removeEventListener('scroll', update);
+        };
+    }, [uncheckedTasks]);
 
     const formatTaskDate = (taskDateKey: string) => {
         const parsedDate = parseISO(taskDateKey);
@@ -43,13 +80,20 @@ export function UncheckedTasksPanel({ refreshSignal = 0, onTaskChecked }: Unchec
                     <p>Nothing outstanding. Unchecked items from any day will collect here.</p>
                 </div>
             ) : (
-                <ul className="tasks-list">
+                <ul
+                    ref={listRef}
+                    className={[
+                        'tasks-list',
+                        scrollEdges.above ? 'more-above' : '',
+                        scrollEdges.below ? 'more-below' : '',
+                    ].filter(Boolean).join(' ')}
+                >
                     {uncheckedTasks.map((task) => (
                         <li key={task.id} className="task-item">
                             <button
                                 type="button"
                                 className="task-check"
-                                onClick={() => handleMarkTaskChecked(task.dateKey, task.itemId)}
+                                onClick={() => handleMarkTaskChecked(task)}
                                 aria-label={`Mark "${task.text}" as checked`}
                                 title="Mark as checked"
                             >

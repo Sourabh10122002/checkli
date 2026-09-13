@@ -186,8 +186,11 @@ export function listDateKeysWithContent(): Set<string> {
     return dateKeys;
 }
 
-/** Returns true when the item existed and was flipped from unchecked to checked. */
-export function markTaskChecked(dateKey: string, itemId: string): boolean {
+/**
+ * Returns true when the item existed and actually changed state. Undo relies on the
+ * reverse direction, so this deliberately handles both rather than only checking off.
+ */
+export function setTaskChecked(dateKey: string, itemId: string, isChecked: boolean): boolean {
     const rawItems = readKey(ITEMS_PREFIX + dateKey);
     if (!rawItems) {
         return false;
@@ -195,9 +198,9 @@ export function markTaskChecked(dateKey: string, itemId: string): boolean {
 
     let hasUpdated = false;
     const updatedItems = parseJson<StoredItem[]>(rawItems, []).map((item) => {
-        if (item.id === itemId && !item.isChecked) {
+        if (item.id === itemId && item.isChecked !== isChecked) {
             hasUpdated = true;
-            return { ...item, isChecked: true };
+            return { ...item, isChecked };
         }
 
         return item;
