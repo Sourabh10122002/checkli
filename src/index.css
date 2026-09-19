@@ -177,6 +177,9 @@ img {
 .app-container > main {
   flex: 1;
   padding-bottom: 4rem;
+  /* The header is sticky, so anything scrolled to the top of <main> -- the skip link's
+     target, or a programmatic focus inside it -- has to clear the header's height. */
+  scroll-margin-top: 5rem;
 }
 
 /* ==========================================================================
@@ -432,6 +435,11 @@ nav {
 .builder-layout:focus {
   outline: none;
   box-shadow: none;
+}
+
+.builder-layout,
+.hero {
+  scroll-margin-top: 5rem;
 }
 
 .builder-sidebar {
