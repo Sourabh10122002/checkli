@@ -77,9 +77,20 @@ function App() {
   // orphaned on <body>. Move it into the new view so keyboard and screen-reader users
   // continue from the content rather than from wherever the old node happened to sit.
   const builderRef = useRef<HTMLDivElement>(null);
+  const hasSwitchedView = useRef(false);
   useEffect(() => {
+    // The two views read as separate pages, so a switch starts at the top rather than
+    // wherever the old one was scrolled to -- the bottom CTA in particular is a long
+    // way down. Skipping the first run leaves the browser's own scroll restoration be.
+    if (hasSwitchedView.current) {
+      window.scrollTo({ top: 0 });
+    }
+    hasSwitchedView.current = true;
+
+    // preventScroll: focusing would otherwise align the layout's top edge with the
+    // viewport top, tucking the first row of cards under the sticky header.
     if (isBuilding) {
-      builderRef.current?.focus();
+      builderRef.current?.focus({ preventScroll: true });
     }
   }, [isBuilding]);
 
